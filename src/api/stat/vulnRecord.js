@@ -1,12 +1,17 @@
 import request from '@/utils/request'
 
-// 查询所有漏洞记录
-export function getList(params) {
+// 查询所有漏洞记录 (CRUD标准接口)
+export function get(params) {
   return request({
     url: 'api/stat/vuln-record',
     method: 'get',
     params
   })
+}
+
+// 查询所有漏洞记录
+export function getList(params) {
+  return get(params)
 }
 
 // 根据ID查询漏洞记录
@@ -52,4 +57,4 @@ export function batchDel(ids) {
   })
 }
 
-export default { getList, getById, add, edit, del, batchDel } 
+export default { get, getList, getById, add, edit, del, batchDel } 

@@ -4,19 +4,19 @@
     <div class="head-container">
       <div v-if="crud.props.searchToggle">
         <!-- 搜索 -->
-        <el-input v-model="query.content" clearable placeholder="事件内容" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
-        <el-input v-model="query.systemName" clearable placeholder="系统名称" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
-        <el-input v-model="query.ipAddress" clearable placeholder="IP地址" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
-        <el-input v-model="query.source" clearable placeholder="事件来源" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
-        <el-select v-model="query.status" clearable placeholder="处理状态" style="width: 120px;" class="filter-item">
+        <el-input v-model="crud.query.content" clearable placeholder="事件内容" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
+        <el-input v-model="crud.query.systemName" clearable placeholder="系统名称" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
+        <el-input v-model="crud.query.ipAddress" clearable placeholder="IP地址" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
+        <el-input v-model="crud.query.source" clearable placeholder="事件来源" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
+        <el-select v-model="crud.query.status" clearable placeholder="处理状态" style="width: 120px;" class="filter-item">
           <el-option label="未处理" value="unhandled" />
           <el-option label="处理中" value="processing" />
           <el-option label="已处理" value="handled" />
           <el-option label="已关闭" value="closed" />
         </el-select>
-        <date-range-picker v-model="query.eventTime" class="date-item" />
-        <el-button class="filter-item" size="mini" type="primary" icon="el-icon-search" @click="handleSearch">搜索</el-button>
-        <el-button class="filter-item" size="mini" type="warning" icon="el-icon-refresh-left" @click="resetQuery">重置</el-button>
+        <date-range-picker v-model="crud.query.eventTime" class="date-item" />
+        <el-button class="filter-item" size="mini" type="primary" icon="el-icon-search" @click="crud.toQuery">搜索</el-button>
+        <el-button class="filter-item" size="mini" type="warning" icon="el-icon-refresh-left" @click="crud.resetQuery()">重置</el-button>
       </div>
       <crudOperation :permission="permission" :crud="crud" />
     </div>
@@ -60,7 +60,7 @@
       </div>
     </el-dialog>
     <!--表格渲染-->
-    <el-table ref="table" v-loading="crud.loading" :data="tableData" highlight-current-row stripe style="width: 100%" @selection-change="crud.selectionChangeHandler">
+    <el-table ref="table" v-loading="crud.loading" :data="crud.data" highlight-current-row stripe style="width: 100%" @selection-change="crud.selectionChangeHandler">
       <el-table-column type="selection" width="55" />
       <el-table-column prop="id" label="ID" width="80px" />
       <el-table-column prop="content" label="事件内容" />
@@ -124,7 +124,7 @@ export default {
     return CRUD({ 
       title: '安全事件',
       url: 'api/stat/event',
-      sort: 'eventTime,desc',
+      sort: ['eventTime,desc'],
       crudMethod: { ...crudEvent },
       optShow: {
         add: true,
@@ -161,120 +161,21 @@ export default {
         eventTime: [
           { required: true, message: '请选择事件时间', trigger: 'change' }
         ]
-      },
-      // 查询参数
-      query: {
-        content: '',
-        systemName: '',
-        ipAddress: '',
-        source: '',
-        status: null,
-        eventTime: null
-      },
-      // 实际用于筛选的参数
-      filterParams: {
-        content: '',
-        systemName: '',
-        ipAddress: '',
-        source: '',
-        status: null,
-        eventTime: null
-      },
-      // 是否启用筛选
-      isFiltering: false
+      }
     }
   },
-  computed: {
-    // 表格数据
-    tableData() {
-      // 如果未启用筛选，直接返回原始数据
-      if (!this.isFiltering) {
-        return this.crud.data || [];
-      }
-      
-      // 启用筛选时，进行数据过滤
-      if (!this.crud.data) return [];
-      
-      let result = [...this.crud.data];
-      
-      // 事件内容筛选
-      if (this.filterParams.content) {
-        result = result.filter(item => 
-          item.content && item.content.toLowerCase().includes(this.filterParams.content.toLowerCase())
-        );
-      }
-      
-      // 系统名称筛选
-      if (this.filterParams.systemName) {
-        result = result.filter(item => 
-          item.systemName && item.systemName.toLowerCase().includes(this.filterParams.systemName.toLowerCase())
-        );
-      }
-      
-      // IP地址筛选
-      if (this.filterParams.ipAddress) {
-        result = result.filter(item => 
-          item.ipAddress && item.ipAddress.toLowerCase().includes(this.filterParams.ipAddress.toLowerCase())
-        );
-      }
-      
-      // 事件来源筛选
-      if (this.filterParams.source) {
-        result = result.filter(item => 
-          item.source && item.source.toLowerCase().includes(this.filterParams.source.toLowerCase())
-        );
-      }
-      
-      // 处理状态筛选
-      if (this.filterParams.status) {
-        result = result.filter(item => item.status === this.filterParams.status);
-      }
-      
-      // 事件时间范围筛选
-      if (this.filterParams.eventTime && Array.isArray(this.filterParams.eventTime) && this.filterParams.eventTime.length === 2) {
-        const startTime = new Date(this.filterParams.eventTime[0]).getTime();
-        const endTime = new Date(this.filterParams.eventTime[1]).getTime();
-        result = result.filter(item => {
-          const eventTime = new Date(item.eventTime).getTime();
-          return eventTime >= startTime && eventTime <= endTime;
-        });
-      }
-      
-      return result;
+  created() {
+    // 初始化查询参数
+    this.crud.query = {
+      content: null,
+      systemName: null,
+      ipAddress: null,
+      source: null,
+      status: null,
+      eventTime: null
     }
   },
   methods: {
-    // 搜索
-    handleSearch() {
-      // 将当前查询参数复制到筛选参数
-      this.filterParams = JSON.parse(JSON.stringify(this.query));
-      // 启用筛选
-      this.isFiltering = true;
-      // 添加调试日志
-      console.log('搜索参数:', this.filterParams);
-      // 强制表格重新渲染
-      this.$nextTick(() => {
-        this.$refs.table.doLayout();
-      });
-    },
-    // 重置查询条件
-    resetQuery() {
-      // 重置查询参数
-      this.query.content = '';
-      this.query.systemName = '';
-      this.query.ipAddress = '';
-      this.query.source = '';
-      this.query.status = null;
-      this.query.eventTime = null;
-      // 重置筛选参数
-      this.filterParams = JSON.parse(JSON.stringify(this.query));
-      // 禁用筛选，显示全部数据
-      this.isFiltering = false;
-      // 更新视图
-      this.$nextTick(() => {
-        this.$refs.table.doLayout();
-      });
-    },
     // 获取状态对应的标签类型
     getStatusType(status) {
       const types = {

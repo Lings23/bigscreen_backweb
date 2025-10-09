@@ -1,6 +1,13 @@
 import request from '@/utils/request'
 
 export default {
+  get(params) {
+    return request({
+      url: 'api/stat/vuln-stat',
+      method: 'get',
+      params
+    })
+  },
   getList(params) {
     return request({
       url: 'api/stat/vuln-stat',

@@ -1,21 +1,17 @@
 import request from '@/utils/request'
 
-// 查询所有攻击飞线记录
-export function getList(params) {
-  // 添加调试日志
-  console.log('攻击飞线API - 请求参数:', params);
-  
+// 查询所有攻击飞线记录 (CRUD标准接口)
+export function get(params) {
   return request({
     url: 'api/stat/attack',
     method: 'get',
     params
-  }).then(res => {
-    console.log('攻击飞线API - 响应数据:', res);
-    return res;
-  }).catch(err => {
-    console.error('攻击飞线API - 请求错误:', err);
-    throw err;
-  });
+  })
+}
+
+// 保留原有getList方法以兼容现有代码
+export function getList(params) {
+  return get(params)
 }
 
 // 根据ID查询攻击飞线记录
@@ -61,4 +57,4 @@ export function batchDel(ids) {
   })
 }
 
-export default { getList, getById, add, edit, del, batchDel } 
+export default { get, getList, getById, add, edit, del, batchDel } 

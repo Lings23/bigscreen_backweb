@@ -3,23 +3,27 @@
     <!--工具栏-->
     <div class="head-container">
       <div v-if="crud.props.searchToggle">
-        <!-- 搜索 -->
+        <!-- 统计时间段搜索 -->
         <el-date-picker
-          v-model="query.statTime"
-          type="datetime"
-          placeholder="选择统计时间"
-          value-format="yyyy-MM-ddTHH:mm:ss"
-          style="width: 200px;"
+          v-model="crud.query.startDate"
+          type="date"
+          placeholder="开始日期"
+          value-format="yyyy-MM-dd"
+          style="width: 150px;"
           class="filter-item"
         />
-        <el-input-number v-model="query.outbound" placeholder="出站异常" style="width: 150px;" class="filter-item" :min="0" />
-        <el-input-number v-model="query.outsideToInside" placeholder="外到内异常" style="width: 150px;" class="filter-item" :min="0" />
-        <el-input-number v-model="query.lateralMove" placeholder="横向移动" style="width: 150px;" class="filter-item" :min="0" />
-        <el-input-number v-model="query.other" placeholder="其他异常" style="width: 150px;" class="filter-item" :min="0" />
-        <el-button class="filter-item" size="mini" type="primary" icon="el-icon-search" @click="handleSearch">搜索</el-button>
-        <el-button class="filter-item" size="mini" type="warning" icon="el-icon-refresh-left" @click="resetQuery">重置</el-button>
+        <el-date-picker
+          v-model="crud.query.endDate"
+          type="date"
+          placeholder="结束日期"
+          value-format="yyyy-MM-dd"
+          style="width: 150px;"
+          class="filter-item"
+        />
+        <el-button class="filter-item" size="mini" type="primary" icon="el-icon-search" @click="crud.toQuery">搜索</el-button>
+        <el-button class="filter-item" size="mini" type="warning" icon="el-icon-refresh-left" @click="crud.resetQuery()">重置</el-button>
       </div>
-      <crudOperation :permission="permission" :crud="crud" />
+      <crudOperation :permission="permission" />
     </div>
     
     <!--表单组件-->
@@ -65,7 +69,7 @@
       </div>
     </el-dialog>
     <!--表格渲染-->
-    <el-table ref="table" v-loading="crud.loading" :data="tableData" highlight-current-row stripe style="width: 100%" @selection-change="crud.selectionChangeHandler">
+    <el-table ref="table" v-loading="crud.loading" :data="crud.data" highlight-current-row stripe style="width: 100%" @selection-change="crud.selectionChangeHandler">
       <el-table-column type="selection" width="55" />
       <el-table-column prop="id" label="ID" width="80px" />
       <el-table-column prop="statTime" label="统计时间" width="180">
@@ -143,7 +147,7 @@ export default {
     return CRUD({ 
       title: '异常事件统计',
       url: 'api/stat/abnormal',
-      sort: 'statTime,desc',
+      sort: ['statTime,desc'],
       crudMethod: { ...crudAbnormal },
       optShow: {
         add: true,
@@ -181,109 +185,17 @@ export default {
           { required: true, message: '请输入其他异常数量', trigger: 'blur' },
           { type: 'number', message: '数量必须为数字', trigger: 'blur' }
         ]
-      },
-      // 查询参数
-      query: {
-        statTime: null,
-        outbound: null,
-        outsideToInside: null,
-        lateralMove: null,
-        other: null
-      },
-      // 实际用于筛选的参数
-      filterParams: {
-        statTime: null,
-        outbound: null,
-        outsideToInside: null,
-        lateralMove: null,
-        other: null
-      },
-      // 是否启用筛选
-      isFiltering: false
+      }
     }
   },
-  computed: {
-    // 表格数据
-    tableData() {
-      // 如果未启用筛选，直接返回原始数据
-      if (!this.isFiltering) {
-        return this.crud.data || [];
-      }
-      
-      // 启用筛选时，进行数据过滤
-      if (!this.crud.data) return [];
-      
-      let result = [...this.crud.data];
-      
-      // 统计时间筛选
-      if (this.filterParams.statTime) {
-        result = result.filter(item => 
-          item.statTime && item.statTime.includes(this.filterParams.statTime)
-        );
-      }
-      
-      // 出站异常筛选
-      if (this.filterParams.outbound !== null) {
-        result = result.filter(item => 
-          item.outbound === this.filterParams.outbound
-        );
-      }
-      
-      // 外到内异常筛选
-      if (this.filterParams.outsideToInside !== null) {
-        result = result.filter(item => 
-          item.outsideToInside === this.filterParams.outsideToInside
-        );
-      }
-      
-      // 横向移动筛选
-      if (this.filterParams.lateralMove !== null) {
-        result = result.filter(item => 
-          item.lateralMove === this.filterParams.lateralMove
-        );
-      }
-      
-      // 其他异常筛选
-      if (this.filterParams.other !== null) {
-        result = result.filter(item => 
-          item.other === this.filterParams.other
-        );
-      }
-      
-      return result;
+  created() {
+    // 初始化查询参数 - 仅保留日期范围搜索
+    this.crud.query = {
+      startDate: null,
+      endDate: null
     }
   },
   methods: {
-    // 搜索
-    handleSearch() {
-      // 将当前查询参数复制到筛选参数
-      this.filterParams = JSON.parse(JSON.stringify(this.query));
-      // 启用筛选
-      this.isFiltering = true;
-      // 添加调试日志
-      console.log('搜索参数:', this.filterParams);
-      // 强制表格重新渲染
-      this.$nextTick(() => {
-        this.$refs.table.doLayout();
-      });
-    },
-    // 重置查询条件
-    resetQuery() {
-      // 重置查询参数
-      this.query.statTime = null;
-      this.query.outbound = null;
-      this.query.outsideToInside = null;
-      this.query.lateralMove = null;
-      this.query.other = null;
-      // 重置筛选参数
-      this.filterParams = JSON.parse(JSON.stringify(this.query));
-      // 禁用筛选，显示全部数据
-      this.isFiltering = false;
-      // 更新视图
-      this.$nextTick(() => {
-        this.$refs.table.doLayout();
-      });
-    },
     // 权限检查
     checkPer(permissions) {
       if (permissions && permissions instanceof Array && permissions.length > 0) {

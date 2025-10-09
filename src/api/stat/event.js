@@ -1,12 +1,17 @@
 import request from '@/utils/request'
 
-// 查询所有安全事件
-export function getList(params) {
+// 查询所有安全事件 (CRUD标准接口)
+export function get(params) {
   return request({
     url: 'api/stat/event',
     method: 'get',
     params
   })
+}
+
+// 保留原有getList方法以兼容现有代码
+export function getList(params) {
+  return get(params)
 }
 
 // 根据ID查询安全事件
@@ -52,4 +57,4 @@ export function batchDel(ids) {
   })
 }
 
-export default { getList, getById, add, edit, del, batchDel } 
+export default { get, getList, getById, add, edit, del, batchDel } 

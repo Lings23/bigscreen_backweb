@@ -3,17 +3,8 @@
     <!--工具栏-->
     <div class="head-container">
       <div v-if="crud.props.searchToggle">
-        <!-- 搜索 -->
-        <el-date-picker
-          v-model="query.statDate"
-          type="date"
-          placeholder="选择统计日期"
-          value-format="yyyy-MM-dd"
-          style="width: 200px;"
-          class="filter-item"
-          @keyup.enter.native="crud.toQuery"
-        />
-        <el-select v-model="query.statYear" clearable placeholder="选择年份" class="filter-item" style="width: 120px">
+        <!-- 告警统计搜索 -->
+        <el-select v-model="crud.query.statYear" clearable placeholder="选择年份" class="filter-item" style="width: 120px">
           <el-option
             v-for="item in yearOptions"
             :key="item"
@@ -21,7 +12,7 @@
             :value="item"
           />
         </el-select>
-        <el-select v-model="query.statQuarter" clearable placeholder="选择季度" class="filter-item" style="width: 120px">
+        <el-select v-model="crud.query.statQuarter" clearable placeholder="选择季度" class="filter-item" style="width: 120px">
           <el-option
             v-for="item in quarterOptions"
             :key="item"
@@ -29,8 +20,8 @@
             :value="item"
           />
         </el-select>
-        <el-button class="filter-item" size="mini" type="primary" icon="el-icon-search" @click="handleSearch">搜索</el-button>
-        <el-button class="filter-item" size="mini" type="warning" icon="el-icon-refresh-left" @click="resetQuery">重置</el-button>
+        <el-button class="filter-item" size="mini" type="primary" icon="el-icon-search" @click="crud.toQuery">搜索</el-button>
+        <el-button class="filter-item" size="mini" type="warning" icon="el-icon-refresh-left" @click="crud.resetQuery()">重置</el-button>
       </div>
       <crudOperation :permission="permission" :crud="crud" />
     </div>
@@ -69,7 +60,7 @@
       </div>
     </el-dialog>
     <!--表格渲染-->
-    <el-table ref="table" v-loading="crud.loading" :data="tableData" highlight-current-row stripe style="width: 100%" @selection-change="crud.selectionChangeHandler">
+    <el-table ref="table" v-loading="crud.loading" :data="crud.data" highlight-current-row stripe style="width: 100%" @selection-change="crud.selectionChangeHandler">
       <el-table-column type="selection" width="55" />
       <el-table-column prop="id" label="ID" width="80px" />
       <el-table-column prop="statDate" label="统计日期" width="120px" />
@@ -141,6 +132,7 @@ export default {
     return CRUD({ 
       title: '告警统计', 
       url: 'api/stat/alarm', 
+      sort: ['statDate,desc'],
       crudMethod: { ...crudAlarm },
       optShow: {
         add: true,
@@ -172,99 +164,17 @@ export default {
         ]
       },
       yearOptions: years,
-      quarterOptions: [1, 2, 3, 4],
-      // 查询参数
-      query: {
-        statDate: '',
-        statYear: null,
-        statQuarter: null
-      },
-      // 实际用于筛选的参数
-      filterParams: {
-        statDate: '',
-        statYear: null,
-        statQuarter: null
-      },
-      // 是否启用筛选
-      isFiltering: false
-    }
-  },
-  computed: {
-    // 表格数据
-    tableData() {
-      // 如果未启用筛选，直接返回原始数据
-      if (!this.isFiltering) {
-        return this.crud.data || [];
-      }
-      
-      // 启用筛选时，进行数据过滤
-      if (!this.crud.data) return [];
-      
-      let result = [...this.crud.data];
-      
-      // 统计日期筛选
-      if (this.filterParams.statDate) {
-        result = result.filter(item => 
-          item.statDate && item.statDate.includes(this.filterParams.statDate)
-        );
-      }
-      
-      // 统计年份筛选
-      if (this.filterParams.statYear) {
-        const filterYear = Number(this.filterParams.statYear);
-        result = result.filter(item => {
-          const itemYear = item.statYear || this.extractYear(item.statDate);
-          return Number(itemYear) === filterYear;
-        });
-      }
-      
-      // 统计季度筛选
-      if (this.filterParams.statQuarter) {
-        const filterQuarter = Number(this.filterParams.statQuarter);
-        result = result.filter(item => {
-          const itemQuarter = item.statQuarter || this.extractQuarter(item.statDate);
-          return Number(itemQuarter) === filterQuarter;
-        });
-      }
-      
-      return result;
+      quarterOptions: [1, 2, 3, 4]
     }
   },
   created() {
-    // 确保crud.data初始化为空数组
-    if (!this.crud.data) {
-      this.crud.data = [];
+    // 初始化查询参数 - 仅保留年份和季度筛选
+    this.crud.query = {
+      statYear: null,
+      statQuarter: null
     }
   },
   methods: {
-    // 搜索
-    handleSearch() {
-      // 将当前查询参数复制到筛选参数
-      this.filterParams = JSON.parse(JSON.stringify(this.query));
-      // 启用筛选
-      this.isFiltering = true;
-      // 添加调试日志
-      console.log('搜索参数:', this.filterParams);
-      // 强制表格重新渲染
-      this.$nextTick(() => {
-        this.$refs.table.doLayout();
-      });
-    },
-    // 重置查询条件
-    resetQuery() {
-      // 重置查询参数
-      this.query.statDate = '';
-      this.query.statYear = null;
-      this.query.statQuarter = null;
-      // 重置筛选参数
-      this.filterParams = JSON.parse(JSON.stringify(this.query));
-      // 禁用筛选，显示全部数据
-      this.isFiltering = false;
-      // 更新视图
-      this.$nextTick(() => {
-        this.$refs.table.doLayout();
-      });
-    },
     // 从日期中提取年份
     extractYear(dateString) {
       if (!dateString) return '';

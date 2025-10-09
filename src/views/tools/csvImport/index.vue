@@ -21,32 +21,17 @@
           <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
           <div class="el-upload__tip" slot="tip">只能上传csv文件，且不超过10MB</div>
         </el-upload>
-        <!-- 默认展示的按钮区域 -->
-        <div class="default-actions">
-                     <el-button type="primary" icon="el-icon-view" @click="previewFile" :loading="previewLoading" :disabled="!selectedFile">
-            预览数据
-          </el-button>
-          <el-button type="success" icon="el-icon-upload" @click="importData" :loading="importLoading" :disabled="!previewData.length || !targetTable">
-            导入数据
-          </el-button>
-          <el-button type="warning" icon="el-icon-delete" @click="clearFile">
-            清除文件
-          </el-button>
-          <el-button type="info" icon="el-icon-download" @click="downloadTemplate" :disabled="!targetTable">
-            下载示例数据
-          </el-button>
-        </div>
 
         <!-- 导入到表的下拉栏 -->
         <div class="table-select-section">
           <el-form :inline="true" label-width="100px">
             <el-form-item label="导入到表">
               <el-select v-model="targetTable" placeholder="请选择目标表" style="width: 300px;" @change="handleTableChange">
-                <el-option 
-                  v-for="table in filteredTables" 
-                  :key="table.value" 
-                  :label="table.label" 
-                  :value="table.value" 
+                <el-option
+                  v-for="table in filteredTables"
+                  :key="table.value"
+                  :label="table.label"
+                  :value="table.value"
                 />
                 <el-option label="新建表..." value="__new__" />
               </el-select>
@@ -54,7 +39,52 @@
           </el-form>
         </div>
 
-       
+        <!-- 数据验证结果 -->
+        <div v-if="validationResult" class="validation-result-section">
+          <el-alert
+            :title="`数据验证结果: ${validationResult.valid ? '通过' : '失败'}`"
+            :type="validationResult.valid ? 'success' : 'error'"
+            :closable="false"
+            show-icon
+            style="margin-bottom: 15px;"
+          />
+          <div v-if="validationResult.errors && validationResult.errors.length > 0">
+            <h4>验证错误:</h4>
+            <el-table :data="validationResult.errors" border style="width: 100%;">
+              <el-table-column prop="columnName" label="字段名" width="150" />
+              <el-table-column prop="columnType" label="期望格式" width="150" />
+              <el-table-column prop="message" label="错误信息" />
+              <el-table-column prop="suggestion" label="修复建议" />
+            </el-table>
+          </div>
+          <div v-if="validationResult.warnings && validationResult.warnings.length > 0">
+            <h4>验证警告:</h4>
+            <el-table :data="validationResult.warnings" border style="width: 100%;">
+              <el-table-column prop="columnName" label="字段名" width="150" />
+              <el-table-column prop="warningType" label="警告类型" width="120" />
+              <el-table-column prop="message" label="警告信息" />
+            </el-table>
+          </div>
+        </div>
+
+        <!-- 默认展示的按钮区域 -->
+        <div class="default-actions">
+          <el-button type="primary" icon="el-icon-view" @click="previewFile" :loading="previewLoading" :disabled="!selectedFile">
+            预览数据
+          </el-button>
+          <el-button type="warning" icon="el-icon-check" @click="validateData" :loading="validationLoading" :disabled="!previewData.length || !targetTable || targetTable === '__new__'">
+            数据验证
+          </el-button>
+          <el-button type="success" icon="el-icon-upload" @click="importData" :loading="importLoading" :disabled="!previewData.length || !targetTable">
+            导入数据
+          </el-button>
+          <el-button type="warning" icon="el-icon-delete" @click="clearFile">
+            清除文件
+          </el-button>
+          <el-button type="info" icon="el-icon-download" @click="downloadTemplate" :disabled="!targetTable || targetTable === '__new__'">
+            下载示例数据
+          </el-button>
+        </div>
 
         <!-- 文件信息显示 -->
         <div v-if="selectedFile" class="file-info">
@@ -142,8 +172,20 @@
 3. 根据示例数据格式准备CSV文件
 4. 拖拽或点击上传文件
 5. 点击"预览数据"查看前10行
-6. 确认格式无误后点击"导入数据"
-7. 等待导入完成并查看结果</pre>
+6. 点击"数据验证"检查数据格式
+7. 确认格式无误后点击"导入数据"
+8. 等待导入完成并查看结果</pre>
+        <blockquote class="my-blockquote">数据验证规则</blockquote>
+        <pre class="my-code">
+# 基于数据库字段类型的智能验证
+- varchar(n): 字符串长度不超过n个字符
+- int/bigint: 必须为整数
+- decimal(p,s): 小数，总位数p，小数位s
+- datetime/timestamp: 标准日期时间格式
+- date: 标准日期格式 (YYYY-MM-DD)
+- tinyint(1): 布尔值 (0/1/true/false)
+- enum: 枚举值验证
+- 必填字段: 不能为空值</pre>
         <blockquote class="my-blockquote">支持的表类型对照</blockquote>
         <pre class="my-code">
 abnormal_event_stat - 网络异常事件统计
@@ -160,12 +202,6 @@ vulnerability_record - 漏洞情况列表
 vulnerability_stat - 漏洞分布情况
 duty_schedule - 值班列表
 device_stat - 设备总览</pre>
-        <blockquote class="my-blockquote">示例数据下载</blockquote>
-        <pre class="my-code">
-# 选择目标表类型后，"下载示例数据"按钮将被激活
-# 点击按钮可下载对应表类型的标准格式示例文件
-# 示例文件包含正确的字段结构和示例数据
-# 可根据示例文件格式准备实际导入数据</pre>
         <blockquote class="my-blockquote">注意事项</blockquote>
         <pre class="my-code">
 # 确保CSV文件格式正确
@@ -173,7 +209,7 @@ device_stat - 设备总览</pre>
 # 大文件建议分批导入
 # 导入前请备份重要数据
 # 选择正确的目标表类型
-# 建议先下载示例数据了解格式要求</pre>
+# 建议先进行数据验证再导入</pre>
       </div>
     </el-tab-pane>
   </el-tabs>
@@ -181,7 +217,7 @@ device_stat - 设备总览</pre>
 
 <script>
 import Papa from 'papaparse'
-import { getAllTables, createTable as apiCreateTable, importCsv as apiImportCsv } from '@/api/tools/csvImport'
+import { getAllTables, createTable as apiCreateTable, importCsv as apiImportCsv, getTableColumns } from '@/api/tools/csvImport'
 
 export default {
   name: 'CsvImport',
@@ -194,6 +230,7 @@ export default {
       tableHeaders: [],
       totalRows: 0,
       previewLoading: false,
+      validationLoading: false,
       importLoading: false,
       importResult: null,
       uploadFormData: null,
@@ -202,6 +239,8 @@ export default {
       showCreateTable: false,
       newTableName: '',
       columns: [],
+      tableColumns: [], // 数据库表字段信息
+      validationResult: null, // 数据验证结果
       // 对照表配置
       tableMapping: {
         'abnormal_event_stat': '网络异常事件统计',
@@ -230,6 +269,13 @@ export default {
       }))
     }
   },
+  watch: {
+    targetTable(newVal) {
+      if (newVal && newVal !== '__new__') {
+        this.loadTableColumns(newVal)
+      }
+    }
+  },
   mounted() {
     this.getTables()
   },
@@ -243,6 +289,46 @@ export default {
         this.tables = []
       })
     },
+    // 加载表字段信息
+    loadTableColumns(tableName) {
+      console.log('开始加载表字段信息:', tableName)
+      getTableColumns(tableName).then(res => {
+        console.log('后端返回的表字段信息:', res)
+        console.log('res.data:', res.data)
+        console.log('res.data类型:', typeof res.data)
+        console.log('res.data是否为数组:', Array.isArray(res.data))
+        
+        // 确保数据是数组格式
+        let columns = []
+        
+        // 检查是否为直接返回的数组（没有data包装）
+        if (Array.isArray(res)) {
+          columns = res
+        } else if (Array.isArray(res.data)) {
+          columns = res.data
+        } else if (res.data && Array.isArray(res.data.columns)) {
+          columns = res.data.columns
+        } else if (res.data && Array.isArray(res.data.data)) {
+          columns = res.data.data
+        } else if (res.data && typeof res.data === 'object') {
+          // 如果是对象，尝试转换为数组
+          columns = Object.values(res.data)
+        } else {
+          console.warn('后端返回的数据格式不正确:', res)
+          this.$message.error('后端返回的数据格式不正确')
+          this.tableColumns = []
+          return
+        }
+        
+        this.tableColumns = columns
+        console.log('设置tableColumns:', this.tableColumns)
+        this.validationResult = null // 清空之前的验证结果
+      }).catch(error => {
+        console.error('加载表字段信息失败:', error)
+        this.$message.error('加载表字段信息失败')
+        this.tableColumns = []
+      })
+    },
     // 文件选择处理
     handleFileChange(file) {
       this.selectedFile = file.raw
@@ -250,6 +336,7 @@ export default {
       this.tableHeaders = []
       this.totalRows = 0
       this.importResult = null
+      this.validationResult = null
       this.targetTable = ''
       // 准备上传数据
       this.uploadFormData = new FormData()
@@ -275,6 +362,8 @@ export default {
         this.newTableName = ''
         this.columns = this.tableHeaders.map(h => ({ name: h, type: 'varchar(255)' }))
         this.showCreateTable = true
+      } else {
+        this.validationResult = null
       }
     },
     // 新建表
@@ -324,10 +413,22 @@ export default {
             this.$message.error('CSV文件格式错误，请检查文件内容')
             return
           }
-          this.tableHeaders = results.meta.fields || []
-          this.previewData = results.data
+          // 仅保留第一行列名非空的列
+          const rawFields = results.meta && Array.isArray(results.meta.fields) ? results.meta.fields : []
+          const filteredHeaders = rawFields.map(h => (h || '').trim()).filter(h => h !== '')
+          if (filteredHeaders.length === 0) {
+            this.$message.error('未检测到有效列名，请检查第一行表头是否为空')
+            return
+          }
+          const filteredRows = results.data.map(row => {
+            const obj = {}
+            filteredHeaders.forEach(h => { obj[h] = row[h] })
+            return obj
+          })
+          this.tableHeaders = filteredHeaders
+          this.previewData = filteredRows
           this.totalRows = results.data.length
-          this.$message.success('文件预览成功')
+          this.$message.success(`文件预览成功，已过滤空白列（共${filteredHeaders.length}列）`)
         } catch (error) {
           this.$message.error('文件解析失败: ' + error.message)
         } finally {
@@ -340,17 +441,284 @@ export default {
       }
       reader.readAsText(this.selectedFile)
     },
+    // 数据验证 - 核心方法
+    validateData() {
+      console.log('开始数据验证')
+      console.log('previewData.length:', this.previewData.length)
+      console.log('targetTable:', this.targetTable)
+      console.log('tableColumns:', this.tableColumns)
+      console.log('tableColumns.length:', this.tableColumns.length)
+      
+      if (!this.previewData.length || !this.targetTable || this.targetTable === '__new__') {
+        this.$message.warning('请先预览文件并选择目标表')
+        return
+      }
+
+      if (!this.tableColumns.length) {
+        console.log('tableColumns为空，显示警告')
+        this.$message.warning('请等待表字段信息加载完成')
+        return
+      }
+      
+      this.validationLoading = true
+      const errors = []
+      const warnings = []
+      
+      // 检查CSV列名与数据库字段的匹配
+      const csvHeaders = this.tableHeaders
+      const dbColumns = this.tableColumns
+      
+      console.log('CSV列名:', csvHeaders)
+      console.log('数据库字段:', dbColumns)
+      
+      // 检查必填字段是否在CSV中存在
+      dbColumns.forEach(dbCol => {
+        const matchedHeader = csvHeaders.find(header => 
+          header.toLowerCase() === dbCol.columnName.toLowerCase()
+        )
+        
+        if (!dbCol.isNullable && !matchedHeader) {
+          errors.push({
+            columnName: dbCol.columnName,
+            columnType: dbCol.columnType,
+            message: `必填字段 '${dbCol.columnName}' 在CSV中不存在`,
+            suggestion: `请在CSV中添加 ${dbCol.columnName} 列`
+          })
+        }
+      })
+      
+      // 检查CSV数据的格式是否符合数据库字段类型
+      csvHeaders.forEach(csvHeader => {
+        const matchedDbCol = dbColumns.find(dbCol => 
+          dbCol.columnName.toLowerCase() === csvHeader.toLowerCase()
+        )
+        
+        if (matchedDbCol) {
+          // 验证该列的所有数据
+          const columnErrors = this.validateColumnData(csvHeader, matchedDbCol)
+          errors.push(...columnErrors)
+        } else {
+          warnings.push({
+            columnName: csvHeader,
+            warningType: 'UNMATCHED_COLUMN',
+            message: `CSV列 '${csvHeader}' 在数据库表中不存在`
+          })
+        }
+      })
+      
+      this.validationResult = {
+        valid: errors.length === 0,
+        summary: {
+          totalColumns: dbColumns.length,
+          validColumns: dbColumns.length - errors.filter(e => !e.columnType).length,
+          invalidColumns: errors.length,
+          warnings: warnings.length,
+          validationTime: new Date().toLocaleString()
+        },
+        errors: errors,
+        warnings: warnings
+      }
+      
+      this.validationLoading = false
+      
+      if (this.validationResult.valid) {
+        this.$message.success('数据验证通过')
+      } else {
+        this.$message.warning(`数据验证失败，发现 ${errors.length} 个错误，${warnings.length} 个警告`)
+      }
+    },
+    // 验证列数据格式
+    validateColumnData(csvHeader, dbColumn) {
+      const errors = []
+      
+      this.previewData.forEach((row, rowIndex) => {
+        const value = row[csvHeader]
+        
+        // 检查必填字段是否为空
+        if (!dbColumn.isNullable && (value === null || value === undefined || value === '')) {
+          errors.push({
+            columnName: dbColumn.columnName,
+            columnType: dbColumn.columnType,
+            message: `第${rowIndex + 1}行，必填字段 '${dbColumn.columnName}' 不能为空`,
+            suggestion: '请填写该字段的数据'
+          })
+          return
+        }
+        
+        // 如果值为空且字段可为空，跳过验证
+        if (value === null || value === undefined || value === '') {
+          return
+        }
+        
+        // 根据字段类型验证数据格式
+        const formatError = this.validateDataFormat(value, dbColumn, rowIndex + 1)
+        if (formatError) {
+          errors.push(formatError)
+        }
+      })
+      
+      return errors
+    },
+    // 验证数据格式
+    validateDataFormat(value, dbColumn, rowIndex) {
+      const columnType = dbColumn.columnType.toUpperCase()
+      
+      // 字符串长度验证
+      if (columnType.includes('VARCHAR') || columnType.includes('CHAR')) {
+        const match = columnType.match(/VARCHAR\((\d+)\)|CHAR\((\d+)\)/)
+        if (match) {
+          const maxLength = parseInt(match[1] || match[2])
+          if (value.length > maxLength) {
+            return {
+              columnName: dbColumn.columnName,
+              columnType: dbColumn.columnType,
+              message: `第${rowIndex}行，字段长度超过限制 (${maxLength}个字符)`,
+              suggestion: `请缩短字符串长度到${maxLength}个字符以内`
+            }
+          }
+        }
+      }
+      
+      // 整数类型验证
+      if (columnType.includes('INT') || columnType.includes('BIGINT')) {
+        if (!/^-?\d+$/.test(value)) {
+          return {
+            columnName: dbColumn.columnName,
+            columnType: dbColumn.columnType,
+            message: `第${rowIndex}行，不是有效的整数`,
+            suggestion: '请输入有效的整数'
+          }
+        }
+        
+        const num = parseInt(value)
+        if (columnType.includes('UNSIGNED') && num < 0) {
+          return {
+            columnName: dbColumn.columnName,
+            columnType: dbColumn.columnType,
+            message: `第${rowIndex}行，无符号整数不能为负数`,
+            suggestion: '请输入非负整数'
+          }
+        }
+      }
+      
+      // 小数类型验证
+      if (columnType.includes('DECIMAL') || columnType.includes('FLOAT') || columnType.includes('DOUBLE')) {
+        if (!/^-?\d+(\.\d+)?$/.test(value)) {
+          return {
+            columnName: dbColumn.columnName,
+            columnType: dbColumn.columnType,
+            message: `第${rowIndex}行，不是有效的小数`,
+            suggestion: '请输入有效的小数'
+          }
+        }
+        
+        // DECIMAL精度验证
+        if (columnType.includes('DECIMAL')) {
+          const match = columnType.match(/DECIMAL\((\d+),(\d+)\)/)
+          if (match) {
+            const precision = parseInt(match[1])
+            const scale = parseInt(match[2])
+            const parts = value.split('.')
+            const integerPart = parts[0].replace('-', '')
+            const decimalPart = parts[1] || ''
+            
+            if (integerPart.length > precision - scale) {
+              return {
+                columnName: dbColumn.columnName,
+                columnType: dbColumn.columnType,
+                message: `第${rowIndex}行，整数部分超过限制 (${precision - scale}位)`,
+                suggestion: `请确保整数部分不超过${precision - scale}位`
+              }
+            }
+            
+            if (decimalPart.length > scale) {
+              return {
+                columnName: dbColumn.columnName,
+                columnType: dbColumn.columnType,
+                message: `第${rowIndex}行，小数部分超过限制 (${scale}位)`,
+                suggestion: `请确保小数部分不超过${scale}位`
+              }
+            }
+          }
+        }
+      }
+      
+      // 日期时间验证
+      if (columnType.includes('DATETIME') || columnType.includes('TIMESTAMP')) {
+        const date = new Date(value)
+        if (isNaN(date.getTime())) {
+          return {
+            columnName: dbColumn.columnName,
+            columnType: dbColumn.columnType,
+            message: `第${rowIndex}行，不是有效的日期时间格式`,
+            suggestion: '请使用标准日期时间格式，如: 2023/12/25 14:30:00'
+          }
+        }
+      }
+      
+      // 日期验证
+      if (columnType.includes('DATE') && !columnType.includes('DATETIME')) {
+        if (!/^\d{4}\/\d{1,2}\/\d{2}$/.test(value)) {
+          return {
+            columnName: dbColumn.columnName,
+            columnType: dbColumn.columnType,
+            message: `第${rowIndex}行，不是有效的日期格式`,
+            suggestion: '请使用标准日期格式，如: 2023/12/25'
+          }
+        }
+        const date = new Date(value)
+        if (isNaN(date.getTime())) {
+          return {
+            columnName: dbColumn.columnName,
+            columnType: dbColumn.columnType,
+            message: `第${rowIndex}行，日期值无效`,
+            suggestion: '请输入有效的日期'
+          }
+        }
+      }
+      
+      // 布尔类型验证
+      if (columnType.includes('TINYINT(1)')) {
+        const validValues = ['0', '1', 'true', 'false', 'yes', 'no']
+        if (!validValues.includes(value.toLowerCase())) {
+          return {
+            columnName: dbColumn.columnName,
+            columnType: dbColumn.columnType,
+            message: `第${rowIndex}行，不是有效的布尔值`,
+            suggestion: '请输入 0/1、true/false、yes/no'
+          }
+        }
+      }
+      
+      // 枚举类型验证
+      if (columnType.includes('ENUM(')) {
+        const match = columnType.match(/ENUM\(([^)]+)\)/)
+        if (match) {
+          const enumValues = match[1].split(',').map(v => v.trim().replace(/'/g, ''))
+          if (!enumValues.includes(value)) {
+            return {
+              columnName: dbColumn.columnName,
+              columnType: dbColumn.columnType,
+              message: `第${rowIndex}行，不是有效的枚举值`,
+              suggestion: `请输入以下值之一: ${enumValues.join(', ')}`
+            }
+          }
+        }
+      }
+      
+      return null // 验证通过
+    },
     // 导入数据（后端API实现）
     importData() {
       if (!this.selectedFile || this.previewData.length === 0 || !this.targetTable) {
-        this.$message.warning('请先选择并预览文件，并选择目标表')
+        this.$message.warning('请先选择并预览文件')
         return
       }
       this.importLoading = true
-      
+
       // 根据对照表获取实际表名
       const actualTableName = this.targetTable
-      
+
       apiImportCsv({
         tableName: actualTableName,
         data: this.previewData,
@@ -380,30 +748,32 @@ export default {
       this.tableHeaders = []
       this.totalRows = 0
       this.importResult = null
+      this.validationResult = null
+      this.tableColumns = []
       this.uploadFormData = null
       this.targetTable = ''
     },
     // 下载示例数据
     downloadTemplate() {
-      if (!this.targetTable) {
+      if (!this.targetTable || this.targetTable === '__new__') {
         this.$message.warning('请先选择目标表')
         return
       }
-      
+
       // 检查是否有对应的示例数据文件
       const fileName = `${this.targetTable}.csv`
-      
+
       // 创建下载链接
       const link = document.createElement('a')
       link.href = `/${fileName}`
       link.download = fileName
       link.target = '_blank'
-      
+
       // 添加到DOM并触发下载
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
-      
+
       this.$message.success(`示例数据下载成功: ${this.tableMapping[this.targetTable] || this.targetTable}`)
     }
   }
@@ -434,6 +804,13 @@ export default {
 }
 .table-select-section {
   margin: 20px 0 10px 0;
+}
+.validation-result-section {
+  margin: 20px 0;
+  padding: 15px;
+  background-color: #fff3cd;
+  border-radius: 4px;
+  border: 1px solid #ffeaa7;
 }
 .preview-section {
   margin-top: 30px;
@@ -483,4 +860,4 @@ export default {
   line-height: 1.4;
   color: #333;
 }
-</style> 
+</style>

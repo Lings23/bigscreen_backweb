@@ -4,17 +4,17 @@
     <div class="head-container">
       <div v-if="crud.props.searchToggle">
         <!-- 搜索 -->
-        <el-input v-model="query.sourceIp" clearable placeholder="源IP" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
-        <el-input v-model="query.targetIp" clearable placeholder="目标IP" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
-        <el-input v-model="query.sourceLocationName" clearable placeholder="源位置" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
-        <el-input v-model="query.targetLocationName" clearable placeholder="目标位置" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
-        <el-select v-model="query.sourceIsDomestic" clearable placeholder="来源类型" style="width: 120px;" class="filter-item">
+        <el-input v-model="crud.query.sourceIp" clearable placeholder="源IP" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
+        <el-input v-model="crud.query.targetIp" clearable placeholder="目标IP" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
+        <el-input v-model="crud.query.sourceLocationName" clearable placeholder="源位置" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
+        <el-input v-model="crud.query.targetLocationName" clearable placeholder="目标位置" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
+        <el-select v-model="crud.query.sourceIsDomestic" clearable placeholder="来源类型" style="width: 120px;" class="filter-item">
           <el-option label="国内" :value="true" />
           <el-option label="国外" :value="false" />
         </el-select>
-        <date-range-picker v-model="query.attackTime" class="date-item" />
-        <el-button class="filter-item" size="mini" type="primary" icon="el-icon-search" @click="handleSearch">搜索</el-button>
-        <el-button class="filter-item" size="mini" type="warning" icon="el-icon-refresh-left" @click="resetQuery">重置</el-button>
+        <date-range-picker v-model="crud.query.attackTime" class="date-item" />
+        <el-button class="filter-item" size="mini" type="primary" icon="el-icon-search" @click="crud.toQuery">搜索</el-button>
+        <el-button class="filter-item" size="mini" type="warning" icon="el-icon-refresh-left" @click="crud.resetQuery()">重置</el-button>
       </div>
       <crudOperation :permission="permission" :crud="crud" />
     </div>
@@ -113,7 +113,7 @@
     <el-table 
       ref="table" 
       v-loading="crud.loading" 
-      :data="tableData" 
+      :data="crud.data" 
       highlight-current-row 
       stripe 
       style="width: 100%" 
@@ -182,7 +182,7 @@ export default {
   name: 'AttackFlyline',
   components: { pagination, crudOperation, rrOperation, udOperation, DateRangePicker },
   cruds() {
-    return CRUD({ title: '攻击飞线', url: 'api/stat/attack', crudMethod: { ...crudAttackFlyline }})
+    return CRUD({ title: '攻击飞线', url: 'api/stat/attack', sort: ['attackTime,desc'], crudMethod: { ...crudAttackFlyline }})
   },
   mixins: [presenter(), header(), form(defaultForm), crud()],
   data() {
@@ -230,128 +230,21 @@ export default {
         attackTime: [
           { required: true, message: '请选择攻击时间', trigger: 'blur' }
         ]
-      },
-      // 查询参数
-      query: {
-        sourceIp: '',
-        targetIp: '',
-        sourceLocationName: '',
-        targetLocationName: '',
-        sourceIsDomestic: null,
-        attackTime: ''
-      },
-      // 实际用于筛选的参数
-      filterParams: {
-        sourceIp: '',
-        targetIp: '',
-        sourceLocationName: '',
-        targetLocationName: '',
-        sourceIsDomestic: null,
-        attackTime: ''
-      },
-      // 是否启用筛选
-      isFiltering: false
-    }
-  },
-  computed: {
-    // 表格数据
-    tableData() {
-      // 如果未启用筛选，直接返回原始数据
-      if (!this.isFiltering) {
-        return this.crud.data || [];
       }
-      
-      // 启用筛选时，进行数据过滤
-      if (!this.crud.data) return [];
-      
-      let result = [...this.crud.data];
-      
-      // 源IP筛选
-      if (this.filterParams.sourceIp) {
-        result = result.filter(item => 
-          item.sourceIp && item.sourceIp.toLowerCase().includes(this.filterParams.sourceIp.toLowerCase())
-        );
-      }
-      
-      // 目标IP筛选
-      if (this.filterParams.targetIp) {
-        result = result.filter(item => 
-          item.targetIp && item.targetIp.toLowerCase().includes(this.filterParams.targetIp.toLowerCase())
-        );
-      }
-      
-      // 源位置筛选
-      if (this.filterParams.sourceLocationName) {
-        result = result.filter(item => 
-          item.sourceLocationName && item.sourceLocationName.includes(this.filterParams.sourceLocationName)
-        );
-      }
-      
-      // 目标位置筛选
-      if (this.filterParams.targetLocationName) {
-        result = result.filter(item => 
-          item.targetLocationName && item.targetLocationName.includes(this.filterParams.targetLocationName)
-        );
-      }
-      
-      // 来源类型筛选
-      if (this.filterParams.sourceIsDomestic !== null && this.filterParams.sourceIsDomestic !== undefined) {
-        result = result.filter(item => item.sourceIsDomestic === this.filterParams.sourceIsDomestic);
-      }
-      
-      // 攻击时间范围筛选
-      if (this.filterParams.attackTime && Array.isArray(this.filterParams.attackTime) && this.filterParams.attackTime.length === 2) {
-        const startTime = new Date(this.filterParams.attackTime[0]).getTime();
-        const endTime = new Date(this.filterParams.attackTime[1]).getTime();
-        result = result.filter(item => {
-          const attackTime = new Date(item.attackTime).getTime();
-          return attackTime >= startTime && attackTime <= endTime;
-        });
-      }
-      
-      return result;
     }
   },
   created() {
-    // 确保crud.data初始化为空数组
-    if (!this.crud.data) {
-      this.crud.data = [];
+    // 初始化查询参数
+    this.crud.query = {
+      sourceIp: null,
+      targetIp: null,
+      sourceLocationName: null,
+      targetLocationName: null,
+      sourceIsDomestic: null,
+      attackTime: null
     }
-    // 设置默认查询参数
-    this.crud.defaultQuery = this.$options.data().query;
   },
   methods: {
-    // 搜索
-    handleSearch() {
-      // 将当前查询参数复制到筛选参数
-      this.filterParams = JSON.parse(JSON.stringify(this.query));
-      // 启用筛选
-      this.isFiltering = true;
-      // 添加调试日志
-      console.log('搜索参数:', this.filterParams);
-      // 强制表格重新渲染
-      this.$nextTick(() => {
-        this.$refs.table.doLayout();
-      });
-    },
-    // 重置查询条件
-    resetQuery() {
-      // 重置查询参数
-      this.query.sourceIp = '';
-      this.query.targetIp = '';
-      this.query.sourceLocationName = '';
-      this.query.targetLocationName = '';
-      this.query.sourceIsDomestic = null;
-      this.query.attackTime = '';
-      // 重置筛选参数
-      this.filterParams = JSON.parse(JSON.stringify(this.query));
-      // 禁用筛选，显示全部数据
-      this.isFiltering = false;
-      // 更新视图
-      this.$nextTick(() => {
-        this.$refs.table.doLayout();
-      });
-    },
     // 权限检查
     checkPer(permissions) {
       if (permissions && permissions instanceof Array && permissions.length > 0) {
