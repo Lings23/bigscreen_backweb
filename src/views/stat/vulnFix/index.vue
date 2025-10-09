@@ -19,7 +19,7 @@
       </div>
       <crudOperation :permission="permission" :crud="crud" />
     </div>
-    
+
     <!--表单组件-->
     <el-dialog :close-on-click-modal="false" :before-close="crud.cancelCU" :visible.sync="crud.status.cu > 0" :title="crud.status.title" width="500px">
       <el-form ref="form" :model="form" :rules="rules" size="small" label-width="100px">
@@ -93,7 +93,7 @@ import udOperation from '@crud/UD.operation'
 import pagination from '@crud/Pagination'
 import { parseTime } from '@/utils/index'
 
-const defaultForm = { 
+const defaultForm = {
   id: null,
   statTime: new Date().toISOString().split('T')[0],
   fixedCount: 0,
@@ -104,7 +104,7 @@ export default {
   name: 'VulnerabilityFixStat',
   components: { pagination, crudOperation, rrOperation, udOperation },
   cruds() {
-    return CRUD({ 
+    return CRUD({
       title: '漏洞修复统计',
       url: 'api/stat/vuln-fix',
       sort: ['statTime,desc'],
@@ -172,4 +172,4 @@ export default {
   display: inline-block;
   margin-right: 8px;
 }
-</style> 
+</style>

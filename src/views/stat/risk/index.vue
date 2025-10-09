@@ -19,7 +19,7 @@
       </div>
       <crudOperation :permission="permission" :crud="crud" />
     </div>
-    
+
     <!--表单组件-->
     <el-dialog :close-on-click-modal="false" :before-close="crud.cancelCU" :visible.sync="crud.status.cu > 0" :title="crud.status.title" width="500px">
       <el-form ref="form" :model="form" :rules="rules" size="small" label-width="100px">
@@ -89,7 +89,7 @@ import udOperation from '@crud/UD.operation'
 import pagination from '@crud/Pagination'
 import { parseTime } from '@/utils/index'
 
-const defaultForm = { 
+const defaultForm = {
   id: null,
   systemName: null,
   riskScore: 0,
@@ -100,7 +100,7 @@ export default {
   name: 'RiskScore',
   components: { pagination, crudOperation, rrOperation, udOperation },
   cruds() {
-    return CRUD({ 
+    return CRUD({
       title: '系统风险评分',
       url: 'api/stat/risk',
       sort: ['scoreDate,desc'],
@@ -146,10 +146,10 @@ export default {
   methods: {
     // 获取风险评分对应的标签类型
     getRiskScoreType(score) {
-      if (score >= 80) return 'danger';
-      if (score >= 60) return 'warning';
-      if (score >= 40) return 'info';
-      return 'success';
+      if (score >= 80) return 'danger'
+      if (score >= 60) return 'warning'
+      if (score >= 40) return 'info'
+      return 'success'
     },
     // 权限检查
     checkPer(permissions) {
@@ -174,4 +174,4 @@ export default {
   display: inline-block;
   margin-right: 8px;
 }
-</style> 
+</style>

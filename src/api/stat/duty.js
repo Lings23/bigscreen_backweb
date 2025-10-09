@@ -57,4 +57,3 @@ export function batchDel(ids) {
   })
 }
 
-export default { get, getList, getById, add, edit, del, batchDel } 
