@@ -174,6 +174,39 @@
               </div>
             </el-card>
           </el-col>
+          <el-col :span="6">
+            <el-card shadow="hover" @click.native="goToPage('/stat/reBaoEvent')">
+              <div slot="header">
+                <span>重保事件管理</span>
+              </div>
+              <div class="card-content">
+                <i class="el-icon-data-board card-icon" />
+                <p>管理重保事件数据</p>
+              </div>
+            </el-card>
+          </el-col>
+          <el-col :span="6">
+            <el-card shadow="hover" @click.native="goToPage('/stat/reBaoEvent')">
+              <div slot="header">
+                <span>安全季报统计</span>
+              </div>
+              <div class="card-content">
+                <i class="el-icon-service card-icon" />
+                <p>管理安全季报数据</p>
+              </div>
+            </el-card>
+          </el-col>
+          <el-col :span="6">
+            <el-card shadow="hover" @click.native="goToPage('/stat/reBaoEvent')">
+              <div slot="header">
+                <span>网络IP攻击管理</span>
+              </div>
+              <div class="card-content">
+                <i class="el-icon-info card-icon" />
+                <p>管理网络IP攻击数据</p>
+              </div>
+            </el-card>
+          </el-col>
         </el-row>
       </div>
     </div>
