@@ -14,7 +14,7 @@
                 <span>攻击飞线管理</span>
               </div>
               <div class="card-content">
-                <i class="el-icon-link card-icon"></i>
+                <i class="el-icon-link card-icon" />
                 <p>管理攻击飞线数据</p>
               </div>
             </el-card>
@@ -25,7 +25,7 @@
                 <span>告警统计</span>
               </div>
               <div class="card-content">
-                <i class="el-icon-bell card-icon"></i>
+                <i class="el-icon-bell card-icon" />
                 <p>管理告警统计数据</p>
               </div>
             </el-card>
@@ -36,7 +36,7 @@
                 <span>漏洞记录</span>
               </div>
               <div class="card-content">
-                <i class="el-icon-warning card-icon"></i>
+                <i class="el-icon-warning card-icon" />
                 <p>管理漏洞记录数据</p>
               </div>
             </el-card>
@@ -47,7 +47,7 @@
                 <span>值班安排</span>
               </div>
               <div class="card-content">
-                <i class="el-icon-user card-icon"></i>
+                <i class="el-icon-user card-icon" />
                 <p>管理值班安排数据</p>
               </div>
             </el-card>
@@ -62,7 +62,7 @@
                 <span>异常事件统计</span>
               </div>
               <div class="card-content">
-                <i class="el-icon-error card-icon"></i>
+                <i class="el-icon-error card-icon" />
                 <p>管理异常事件数据</p>
               </div>
             </el-card>
@@ -73,7 +73,7 @@
                 <span>安全事件</span>
               </div>
               <div class="card-content">
-                <i class="el-icon-warning-outline card-icon"></i>
+                <i class="el-icon-warning-outline card-icon" />
                 <p>管理安全事件数据</p>
               </div>
             </el-card>
@@ -84,7 +84,7 @@
                 <span>资产统计</span>
               </div>
               <div class="card-content">
-                <i class="el-icon-coin card-icon"></i>
+                <i class="el-icon-coin card-icon" />
                 <p>管理资产统计数据</p>
               </div>
             </el-card>
@@ -95,7 +95,7 @@
                 <span>区域统计</span>
               </div>
               <div class="card-content">
-                <i class="el-icon-location card-icon"></i>
+                <i class="el-icon-location card-icon" />
                 <p>管理区域统计数据</p>
               </div>
             </el-card>
@@ -110,7 +110,7 @@
                 <span>资产列表</span>
               </div>
               <div class="card-content">
-                <i class="el-icon-document card-icon"></i>
+                <i class="el-icon-document card-icon" />
                 <p>管理资产列表数据</p>
               </div>
             </el-card>
@@ -121,7 +121,7 @@
                 <span>风险评分</span>
               </div>
               <div class="card-content">
-                <i class="el-icon-data-analysis card-icon"></i>
+                <i class="el-icon-data-analysis card-icon" />
                 <p>管理系统风险评分</p>
               </div>
             </el-card>
@@ -132,7 +132,7 @@
                 <span>漏洞统计</span>
               </div>
               <div class="card-content">
-                <i class="el-icon-pie-chart card-icon"></i>
+                <i class="el-icon-pie-chart card-icon" />
                 <p>管理漏洞统计数据</p>
               </div>
             </el-card>
@@ -143,7 +143,7 @@
                 <span>漏洞修复</span>
               </div>
               <div class="card-content">
-                <i class="el-icon-check card-icon"></i>
+                <i class="el-icon-check card-icon" />
                 <p>管理漏洞修复数据</p>
               </div>
             </el-card>
@@ -158,7 +158,7 @@
                 <span>出站IP统计</span>
               </div>
               <div class="card-content">
-                <i class="el-icon-connection card-icon"></i>
+                <i class="el-icon-connection card-icon" />
                 <p>管理出站IP数据</p>
               </div>
             </el-card>
@@ -169,7 +169,7 @@
                 <span>设备状态</span>
               </div>
               <div class="card-content">
-                <i class="el-icon-monitor card-icon"></i>
+                <i class="el-icon-monitor card-icon" />
                 <p>管理设备状态数据</p>
               </div>
             </el-card>
